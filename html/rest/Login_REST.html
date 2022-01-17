@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="js/jquery.js"></script>
+        <script src="css/jquery-ui.js"></script>
+        <link rel="stylesheet" href="css/jquery-ui.css" />
+        <title>REST Login Page</title>
+    </head>
+    <body onLoad="resetAll( )">
+        <h1>Sample REST Login Application</h1><hr>
+        <div id="logintab">
+            username: <input type="text" id="input_username" placeholder="Required"/><br />
+            password: <input type="text" id="input_password" /><br /><br />
+            <button id="login">Log in</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button id="reset">Reset</button><br /><br />
+        </div>
+        <script type="text/javascript">
+            var uriLogin = 'http://localhost:8000/api/v2/login';
+            var authToken;
+            var username;
+            var password;
+            var loginbody = 'username=' + username + '&' + 'password=' + password;
+            // Reset all page data
+            $('#reset').click(function ( ) {
+                resetAll();
+            });
+            // handle username field change
+            $('#input_username').keyup(function ( ) {
+                username = $(this).val( );
+            });
+            // handle password field change
+            $('#input_password').keyup(function ( ) {
+                password = $(this).val( );
+            });
+            // process login button
+            $('#login').click(function ( ) {
+                if (password) {
+                    loginbody = 'username=' + username + '&' + 'password=' + password;
+                } else {
+                    loginbody = 'username=' + username;
+                }
+                ;
+                $.ajax({
+                    type: 'POST',
+                    data: loginbody,
+                    url: uriLogin,
+                    dataType: 'json',
+                    crossDomain: true,
+                    success: function (data) {
+                        authToken = data.authToken;
+                        $('#output').html("Login success!" +
+                                "<br/>AdminRights: " + data.adminRights +
+                                "<br/>authToken: " + data.authToken +
+                                "<br/>User ID: " + data.user.id +
+                                "<br/>Username :" + data.user.username +
+                                "<br/>email : " + data.user.email +
+                                "<br/>Home folder : " + data.user.homeFolder);
+                    },
+                    error: function () {
+                        $('#output').html("Login failure <br/>User : " + username);
+                        $('input:text').val("");
+                    }
+                });
+            });
+            function resetAll() {
+                $('input:text').val("");
+                $('#output').empty( );
+            }
+        </script>
+        <div id="output"></div>
+    </body>
+</html>

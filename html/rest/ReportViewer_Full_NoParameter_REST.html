@@ -1,0 +1,332 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="js/jquery.js"></script>
+        <script src="css/jquery-ui.js"></script>
+        <script type="text/javascript" src="http://localhost:8700/iportal/jsapi"></script>
+        <link rel="stylesheet" href="css/jquery-ui.css" />
+        <title>Sample REST Report Application</title>
+    </head>
+    <body onLoad="resetAll( )">
+        <h1>Sample REST Report Application</h1><hr>
+        <div id="logintab">
+            username: <input type="text" id="input_username" placeholder="Required"/><br />
+            password: <input type="text" id="input_password" /><br /><br />
+            <button id="login">Log in</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button id="reset">Reset</button><br /><br />
+            <button id="getlist">Get Report Designs and Documents</button><br /><br />          
+            <label>Report Design:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+            <select id="designDropdownList" class="stringInfoSpacing">
+                <option value="-1" selected="selected">Use Get Report Designs
+                </option>
+            </select>
+            <button id="viewreport">View Report</button><br /><br />
+            <label>Report Document:</label>
+            <select id="docDropdownList" class="stringInfoSpacing">
+                <option value="-1" selected="selected">Use Get Report Documents
+                </option>
+            </select>
+            <button id="viewdoc">View Report</button><br /><br />
+        </div>
+        <script type="text/javascript">
+            var uriLogin = 'http://localhost:8000/api/v2/login';
+            var uriFiles = 'http://localhost:8000/api/v2/files';
+            var uriVisuals = 'http://localhost:8000/api/v2/visuals';
+            var uriJobs = 'http://localhost:8000/api/v2/jobs/execute';
+            var iportalUrl = 'http://localhost:8700/iportal';
+            var authToken;
+            var username;
+            var password;
+            var loginbody = 'username=' + username + '&' + 'password=' + password;
+
+            var panel;
+            var uiConfig;
+            var myviewer;
+
+            // Reset all page data
+            $('#reset').click(function ( ) {
+                resetAll();
+            });
+            // handle username field change
+            $('#input_username').keyup(function ( ) {
+                username = $(this).val( );
+            });
+            // handle password field change
+            $('#input_password').keyup(function ( ) {
+                password = $(this).val( );
+            });
+            // process login button
+            $('#login').click(function ( ) {
+                if (password) {
+                    loginbody = 'username=' + username + '&' + 'password=' + password;
+                } else {
+                    loginbody = 'username=' + username;
+                }
+                ;
+                $.ajax({
+                    type: 'POST',
+                    data: loginbody,
+                    url: uriLogin,
+                    dataType: 'json',
+                    crossDomain: true,
+                    success: function (data) {
+                        authToken = data.authToken;
+                        // Load JSAPI viewer module
+                        acLoad( );
+                        $('#output').html("Login success!" +
+                                "<br/>AdminRights: " + data.adminRights +
+                                "<br/>authToken: " + data.authToken +
+                                "<br/>User ID: " + data.user.id +
+                                "<br/>Username :" + data.user.username +
+                                "<br/>email : " + data.user.email +
+                                "<br/>Home folder : " + data.user.homeFolder);
+                    },
+                    error: function () {
+                        $('#output').html("Login failure <br/>User : " + username);
+                        $('input:text').val("");
+                    }
+                });
+            });
+
+            var designIndex = 0;
+            // Handle design field change
+            $('#designDropdownList').change(function () {
+                designIndex = $(this).val();
+            });
+            var docIndex = 0;
+            // Handle doc field change
+            $('#docDropdownList').change(function () {
+                docIndex = $(this).val();
+            });
+
+            // Process get list buttonfunction
+            $('#getlist').click(function () {
+                getList();
+            });
+            var docCount = 0;
+            var docIdArray = new Array();
+            var designCount = 0;
+            var designIdArray = new Array();
+            function getList() {
+                if (authToken == null) {
+                    alert("Log in first");
+                    return;
+                }
+                docCount = 0;
+                designCount = 0;
+                $('#output').empty();
+                $('#docDropdownList').empty( );
+                $('#designDropdownList').empty( );
+                $.ajax({
+                    type: 'GET',
+                    url: uriFiles,
+                    dataType: 'json',
+                    crossDomain: true,
+                    // headers: {'AuthToken': authToken},
+                    success: function (data) {
+                        console.log(data);
+                        buildList(0, data, "");
+                    },
+                    error: function () {
+                        $('#output').html("getDesignList failure <br/>");
+                        $('input:text').val("");
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('AuthToken', authToken);
+                    }
+                });
+            }
+
+            function buildList(depth, data, path) {
+                $.each(data.itemList.file, function (i, item) {
+                    var curPath = path + "/" + item.name;
+                    if (item.fileType === 'Directory') {
+                        if (depth >= 15) {
+                            $('#output').append("Too many directory levels: " + depth + " " + item.name + "<br />");
+                            return;
+                        } else {
+                            $.ajax({
+                                type: 'GET',
+                                url: uriFiles + '/' + item.id,
+                                dataType: 'json',
+                                crossDomain: true,
+                                // headers: {'AuthToken': authToken},
+                                success: function (data) {
+                                    console.log(data);
+                                    buildList(depth + 1, data, curPath);
+                                },
+                                error: function () {
+                                    $('#output').html("buildDesignList failure <br/>");
+                                    $('input:text').val("");
+                                },
+                                beforeSend: function (xhr) {
+                                    xhr.setRequestHeader('AuthToken', authToken);
+                                }
+                            });
+                        }
+                    } else if (item.fileType === 'RPTDOCUMENT') {
+                        docIdArray[docCount] = curPath;
+                        //var rptName = item.name.substr(0, item.name.search(/.RPTDESIGN/i));
+                        $("<option value=\'" + docCount + "\'>" + curPath + "</option>").appendTo("#docDropdownList");
+                        docCount += 1;
+                    } else if (item.fileType === 'RPTDESIGN') {
+                        designIdArray[designCount] = item.id;
+                        //var rptName = item.name.substr(0, item.name.search(/.RPTDESIGN/i));
+                        $("<option value=\'" + designCount + "\'>" + curPath + "</option>").appendTo("#designDropdownList");
+                        designCount += 1;
+                    }
+                });
+
+                //sortArray("#designDropdownList", "option");
+            }
+
+            // Process view report button
+            $('#viewreport').click(function () {
+                checkParameters(designIdArray[designIndex]);
+            });
+
+            // Process view report button
+            $('#viewdoc').click(function () {
+                viewDocument(docIdArray[docIndex]);
+            });
+
+            function sortArray(id, option) {
+                var selectOptions = $(id + " " + option);
+                selectOptions.sort(function (a, b) {
+                    if (a.text > b.text) {
+                        return 1;
+                    } else if (a.text < b.text) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                });
+
+                $(id).empty().append(selectOptions);
+                $(id).val(-1);
+            }
+
+            function acLoad() {
+                actuate.load("viewer");
+                var reqOps = new actuate.RequestOptions();
+                reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+                reqOps.setIServerUrl("http://localhost:8000");
+                reqOps.setVolumeProfile("Default Volume");
+                reqOps.setRESTAuthToken(authToken);
+                actuate.initialize(iportalUrl, reqOps, null, null, JSAPILoaded, JSAPINotLoaded);
+            }
+            function JSAPILoaded() {
+                $('#output').append("</br></br>JSAPI viewer module loaded");
+            }
+            function JSAPINotLoaded(exception) {
+                $('#output').append("</br></br><b>JSAPI viewer module not loaded</b>");
+                alert("Your application encountered an exception: \n" + exception.getMessage());
+            }
+
+            function checkParameters(reportId) {
+                if (authToken == null) {
+                    alert("Log in first");
+                    return;
+                }
+                // Check for parameters
+                $.ajax({
+                    type: 'GET',
+                    url: uriVisuals + '/' + reportId + '/parameters',
+                    dataType: 'json',
+                    crossDomain: true,
+                    //headers: {'AuthToken': authToken},
+                    success: function (data) {
+                        console.log(data);
+                        runReport(reportId, data);
+                    },
+                    error: function () {
+                        $('#output').html("checkParameters failure <br/>");
+                        $('input:text').val("");
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('AuthToken', authToken);
+                    }
+                });
+            }
+
+            function viewDocument(docName) {
+                $('#output').empty( );
+                //$('#viewerpane').empty( );
+                if (authToken == null) {
+                    alert("Log in first");
+                    return;
+                }
+                if (panel == null) {
+                    panel = new actuate.viewer.BrowserPanel( );
+                }
+                if (uiConfig == null) {
+                    uiConfig = new actuate.viewer.UIConfig( );
+                    uiConfig.setContentPanel(panel);
+                }
+                if (myviewer == null) {
+                    myviewer = new actuate.Viewer("viewerpane", uiConfig);
+                    myviewer.setSize(1000, 800);
+                }
+                myviewer.setReportName(docName);
+                myviewer.submit( );
+            }
+
+            function runReport(reportId, data) {
+                $('#output').empty( );
+                //$('#viewerpane').empty( );
+                if (JSON.stringify(data) === '{}') {
+                    // Execute the report
+                    if (panel == null) {
+                        panel = new actuate.viewer.BrowserPanel( );
+                    }
+                    if (uiConfig == null) {
+                        uiConfig = new actuate.viewer.UIConfig( );
+                        uiConfig.setContentPanel(panel);
+                    }
+                    if (myviewer == null) {
+                        myviewer = new actuate.Viewer("viewerpane", uiConfig);
+                        myviewer.setSize(1000, 800);
+                    }
+                    $.ajax({
+                        type: 'POST',
+                        url: uriJobs,
+                        dataType: 'json',
+                        data: 'reportId=' + reportId,
+                        crossDomain: true,
+                        //headers: {'AuthToken': authToken},
+                        success: function (data1) {
+                            var rptDoc = "/$$$Transient/" + data1.objectId + ".rptdocument";
+                            $('#output').html("Created report document: reportId = " + reportId
+                                    + ", objectId = " + data1.objectId
+                                    + ", outputFileType = " + data1.outputFileType
+                                    + ", reportDocument = " + rptDoc
+                                    + "<br/>Connection handle: " + data1.connectionHandle);
+                            myviewer.setReportDocument(rptDoc, data1.connectionHandle);
+                            myviewer.submit( );
+                        },
+                        error: function () {
+                            $('#output').html("Failed to execute report<br/>Id: " + reportId);
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('AuthToken', authToken);
+                        }
+                    });
+                } else {
+                    $('#output').html('This design has parameters. Id: ' + reportId);
+                }
+            }
+
+            function resetAll() {
+                $('input:text').val("");
+                $('#output').empty( );
+                $('#designDropdownList').val(-1);
+                $('#docDropdownList').val(-1);
+                //$('#designDropdownList').empty();
+                $('#viewerpane').empty( );
+            }
+        </script>
+        <div id="output"></div>
+        <br><br>
+        <div id="viewerpane"></div>
+    </body>
+</html>

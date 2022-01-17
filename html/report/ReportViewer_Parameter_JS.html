@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8">
+        <title>Sample Report Viewer with Parameters Page</title>
+        <script type="text/javascript">
+            var demoReports = {
+                order: "/Applications/BIRT Sample App/Report Designs/Customer Order History.rptdesign",
+                measure: "/Applications/IoT_Demo/PredictiveMaintenance/Report Designs/Measurement Analysis.rptdesign"
+            };
+        </script>
+    </head>
+    <body onload="init( )">
+        <div id="parampane">
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>
+            <script type="text/javascript">
+                var url = "http://127.0.0.1:8700/iportal/";
+                var username = "administrator";
+                var password = "";
+                function init( ) {
+                    actuate.load("viewer");
+                    actuate.load("parameter");
+                    actuate.initialize(url, null, username, password, displayParams);
+                }
+                function displayParams( ) {
+                    param = new actuate.Parameter("parampane");
+                    param.setReportName(demoReports.order);
+                    param.submit(function ( )
+                    {
+                        document.getElementById("run").style.visibility = 'visible';
+                    });
+                }
+                function processParameters( ) {
+                    param.downloadParameterValues(runReport);
+                }
+            </script>
+        </div>
+        
+        <div>
+            <hr><br>
+            <input type="button" id="run" name="run" value="Run Report" onclick="processParameters()">
+            <br><br>
+        </div>
+        
+        <div id="viewerpane">
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>
+            <script type="text/javascript">
+                function runReport(paramvalues) {
+                    console.log(paramvalues);
+                    var viewer = new actuate.Viewer("viewerpane");
+                    viewer.setReportName(demoReports.order);
+                    viewer.setParameterValues(paramvalues);
+                    viewer.submit( );
+                }
+            </script>
+        </div>
+    </body>
+</html>

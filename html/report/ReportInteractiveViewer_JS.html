@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <title>Sample Interactive Viewer with browser-specific Controls</title>
+    </head>
+    <body onload="init()">     
+        <div id="viewer">            
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>            
+            <script type="text/javascript">
+                function init( ) {
+                    actuate.load("viewer");
+                    actuate.initialize( "http://127.0.0.1:8700/iportal", null, "Administrator", "", runReport);
+                }
+                function runReport( ) {
+                    var browserName = navigator.appName;                    
+                    //alert("**** " + navigator.appName + "-" + navigator.appCodeName + "-" + navigator.product + "-" + navigator.vendor + "-" + navigator.platform);
+                    if (browserName === "Microsoft Internet Explorer") {                        
+                        var ieUIConfig = new actuate.viewer.UIConfig( );
+                        ieUIConfig.setContentPanel(new actuate.viewer.BrowserPanel());
+                        var myviewer = new actuate.Viewer("viewer", ieUIConfig);
+                    } 
+                    else {
+                        var ieUIConfig = new actuate.viewer.UIConfig( );
+                        ieUIConfig.setContentPanel(new actuate.viewer.BrowserPanel());
+                        var myviewer = new actuate.Viewer("viewer", ieUIConfig);
+                        //var myviewer = new actuate.Viewer("viewer");
+                    }
+                    myviewer.setReportName("/Applications/BIRT Sample App/Report Designs/Top Sales Performers.rptdesign");
+                    myviewer.submit( );
+                }
+            </script>
+        </div>
+    </body>
+</html>

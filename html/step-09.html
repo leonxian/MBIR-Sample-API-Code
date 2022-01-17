@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=windows-1252" />
+        <meta http-equiv="Content-Language" content="en-us">
+        <title>Mashup - Step 2</title>
+        <link rel="stylesheet" href="mashup.css" />	
+        <script src="http://localhost:8700/iportal/jsapi"type="text/javascript" language="JavaScript" src="http://localhost:8700/iportal/jsapi"></script>
+        <!-- imports for jquery and highchart -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script type="text/javascript" language="JavaScript">
+        < !--functionality goes here-- >
+                var portal = "http://localhost:8700/iportal";
+        var slideUrl = "/Report Designs/customized/";
+        var viewer, rsDef, params, reportName, pathName;
+        var defaultReport = "/Report Designs/customized/Customer Order History.rptdesign"
+
+        function doLoad() {
+            actuate.load("viewer");
+
+
+            // Hard code login details
+            actuate.initialize(portal, null, "Administrator", "", loadSuccess, loadFail);
+        }
+
+        function loadSuccess(portal, userId, iserverUrl, volume) {
+            afterInit();
+            loadSlides()
+        }
+        function loadFail() {
+            alert("FAILED to authenticate")
+        }
+        // Load reportlet in top left
+        function afterInit() {
+            var sumViewer = new actuate.Viewer("SummaryDiv");
+            sumViewer.setReportName("/Report Designs/customized/Mobile Invoice 2.RPTDESIGN");
+            sumViewer.setReportletBookmark("Mapcite");
+            sumViewer.setWidth(890);
+            sumViewer.setHeight(380);
+            var uiopts = new actuate.viewer.UIOptions();
+            uiopts.enableToolBar(false);
+            sumViewer.setUIOptions(uiopts);
+            sumViewer.submit();
+        }
+
+        function selectionChanged(selectedItem, pathName) {
+            reportName = pathName; loadReportParams(pathName)}
+
+        </script>
+        <style>
+        </style>
+    </head>
+    <body onload="doLoad()">
+        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="vertical-align:top; width:480px">
+                    <div class="mashupContainer">
+                        <div class="mashupTitle">Sales Summary</div>
+                        <div class="mashupContent" id="SummaryDiv"></div>
+                    </div>
+                </td>
+                <td style="vertical-align:top;">
+                    <div class="mashupContainer">
+                        <div id="folderlist"></div>
+                        <div class="mashupContainer">
+                            <div class="mashupTitle"> Available Reports</div>
+                            <div class="mashupContent"	id="slides"></div>
+                            <div class="mashupContent" id="ReportParamDiv"></div>
+                            <div class="mashupContent">
+                                <button id="RunReportButton" onclick="processParams()">Run Report</button>
+                            </div>
+                        </div>
+                </td>
+            </tr>
+        </table>
+        <div class="mashupContainer" style="clear:both">
+            <div class="mashupContent" id="ReportDiv"></div>
+            <p class="footer"><a href="step-01.html">Previous</a> | <a href="step-03.html">Next</a> | <a href="mashup.html">Final</a></p>
+    </body>
+</html>

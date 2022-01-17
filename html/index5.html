@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+    <head>
+        <title>EW Magellan Application</title>
+        <link rel='shortcut icon' type='image/x-icon' href='img/favicon.ico' />
+        <!-- 
+        *******************************************************************
+        *   JavaScript
+        *******************************************************************
+        -->
+        <script src="../../jsapi" type='text/javascript'></script>
+        <script type='text/javascript'>
+            var host = location.host;
+            var parameters = location.pathname.split("/");
+            var appName = parameters[3].split('%20').join(' ');
+
+            actuate.load('viewer');
+            designName = '/Applications/' + appName + '/Report Designs/getUserName.rptdesign';
+            var reqOps = new actuate.RequestOptions( );
+            reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+
+            < !-- load page -- >
+            actuate.initialize('http://' + host + '/iportal/', reqOps == undefined ? null : reqOps, null, null, myInit);
+
+
+            function myInit(){
+                var options = new actuate.viewer.UIOptions();
+                options.enableToolBar(false);
+
+                viewer1 = new actuate.Viewer( 'acContainer' );
+                viewer1.setReportDesign(designName);
+                viewer1.setSize(1,1);
+                viewer1.setUIOptions( options );
+                viewer1.submit();
+        };
+
+        function setActUserName(a) {
+                sessionStorage.actUserName = a;
+                document.location.href="main.html";
+        };
+        </script>
+        <!-- 
+        *******************************************************************
+        *   HTML
+        *******************************************************************
+        -->
+        <style>
+            .progress_animation {
+                visibility:hidden !important
+            }
+        </style>
+    <div id='acContainer' style='visibility:hidden'></div>
+    <div style="top:50%; left:45%; position:absolute"><img src="img/Preloader_3.gif"/></div>
+
+</html>

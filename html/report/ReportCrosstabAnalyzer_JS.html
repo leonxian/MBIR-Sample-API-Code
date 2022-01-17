@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <title>CrossTab Analyzer Page</title>
+    </head>
+    <body onload="init()">
+        <div id="analyzer">
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>
+            <script type="text/javascript">
+            //var tabviewer;
+            function init() {
+                actuate.load("xtabAnalyzer");
+                actuate.initialize("http://127.0.0.1:8700/iportal", null, "Administrator", "", runAnalyzer);
+            }
+            function runAnalyzer() {
+                var tabviewer = new actuate.XTabAnalyzer("analyzer");
+                tabviewer.setReportName("/Home/administrator/Sample_CrossTab.rptdesign");
+                tabviewer.setXTabBookmark("samplechart");
+                tabviewer.submit();
+            }
+            </script>
+        </div>
+    </body>
+</html>

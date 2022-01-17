@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            var demoDashboards = {
+                fax: "/Applications/FaxProject/Dashboards/Fax.dashboard"
+            };
+            var DEV_MODE = false;
+        </script>
+
+        <title>Fax Dashboard</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+        <link href="http://localhost:8700/iportal/common/jslib/themes/default/birt360.css" type="text/css" rel="stylesheet" >
+        <link href="http://localhost:8700/iportal/common/jslib/themes/default/yggdrasil.css" type="text/css" rel="stylesheet" >
+        <link href="http://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css"  >
+
+        <style>
+            .actuate-dashboard-view-outerwrapper {
+                padding: 0 !important;
+            }
+        </style>
+
+        <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>
+        <script type="text/javascript">
+            var $ = actuate.common.web.$; //assign jQuery to standard $ variable.
+
+            $(document).ready(function () {
+                var DEV_MODE = isDevMode();
+                var url = DEV_MODE ? "/iportal" : "http://localhost:8700/iportal";
+                var user = DEV_MODE ? "Administrator" : null;
+                var pass = DEV_MODE ? "" : null;
+
+                actuate.load("dashboard");
+                var reqOps = new actuate.RequestOptions( );
+                reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+
+                actuate.initialize(url, reqOps, user, pass, function () {
+                    var dashboard = new actuate.Dashboard("dashboardDiv");
+                    dashboard.setDashboardName(demoDashboards.fax);
+                    dashboard.setWidth(1800);
+                    dashboard.setHeight($(document).height() - 4);
+                    dashboard.setIsDesigner(false);
+                    dashboard.submit();
+                });
+            });
+
+            function isDevMode() {
+                return DEV_MODE;
+            }
+        </script>	
+    </head>
+    <body>
+        <div style="width:100%; margin:auto;">
+             <table width="100%">
+                <tr>
+                    <td style="padding:0">
+                        <div id="dashboardDiv" style="background:#FFFFFF"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <title>Dashboard Page</title>
+    <LINK href="http://myserver/iportal/common/jslib/themes/default/birt360.css" type="text/css" rel="stylesheet">
+    <LINK href="http://myserver/iportal/iportal/common/webfonts/webfonts.css" type="text/css" rel="stylesheet">
+    <script type="text/javascript" src="http://myserver/iportal/jsapi"></script>
+
+
+</head>
+
+
+<body onload="acload()">
+
+    <div id="message"></div>
+
+    <div id="dashboardContainer">
+
+        <script defer="defer" type="text/javascript" language="JavaScript">
+
+
+
+            var dashboard;
+
+            function acload() {
+                actuate.load("dashboard");
+                var reqOps = new actuate.RequestOptions( );
+                reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+                reqOps.setVolume("Default Volume");
+                actuate.initialize("http://myserver/iportal/", reqOps, "admin", "admin", afterInit);
+            }
+
+            function afterInit() {
+                var containerID = "dashboardContainer";
+                dashboard = new actuate.Dashboard(containerID);
+                dashboard.setIsDesigner(true);
+                dashboard.setWidth(1000);
+                dashboard.setHeight(700);
+                dashboard.setDashboardName("/Dashboards/Social Insight.dashboard");
+                dashboard.submit(
+                        function () {
+                            //$("a[title='Gadget from Gallery...']").attr('id', 'myGadgets');		// Give the <A> and ID
+                            //document.getElementById("myGadgets").click();						// jQuery $(element).click() dooesn't work -- go back to basics
+                            //$("button:contains('Hide')").click();								// Hide the dashbaord edit toolbar
+                        }
+                );
+            }
+        </script>
+
+</body>
+</html>

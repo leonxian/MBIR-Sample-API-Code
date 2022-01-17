@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <title>Sample Report Viewer with User Restricted Page</title>
+        <script type="text/javascript">
+            var demoReports = {
+                revenue: "/Applications/BIRT Sample App/Report Designs/Monthly Revenue Analysis.rptdesign"
+            };
+        </script>
+    </head>
+    <body onload="init()">     
+        <div>
+            User Name:
+            <input type="text" size="80" id="username" value="Guest" name="user_name">
+            <input type="button" id="run" value="Run Viewer" onclick="run()">
+            <br><br>
+        </div>
+
+        <div id="contentpane">            
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>            
+            <script type="text/javascript">
+                var url = "http://127.0.0.1:8700/iportal/";
+                var username = "administrator";
+                var password = "";
+                function init() {
+                    actuate.load("viewer");
+                    actuate.initialize(url, null, username, password, null);
+                }
+                function run() {
+                    var manUIOptions = new actuate.viewer.UIOptions( );
+                    var username = document.getElementById("username").value;
+                    if (username !== "administrator" && username !== "Administrator") {
+                        manUIOptions.enableMainMenu(false);
+                    }
+                    var myviewer = new actuate.Viewer("contentpane");
+                    myviewer.setUIOptions(manUIOptions);
+                    myviewer.setReportName(demoReports.revenue);
+                    myviewer.submit();
+                }
+            </script>
+        </div>
+    </body>
+</html>

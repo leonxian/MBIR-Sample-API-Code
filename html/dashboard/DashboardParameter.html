@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script type="text/javascript" src="http://localhost:8700/iportal/jsapi"></script>
+        <script type="text/javascript" language="JavaScript">
+            var dashboardDef;
+            function acload() {
+                actuate.load("dashboard");
+                var reqOps = new actuate.RequestOptions( );
+                reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+                actuate.initialize("http://localhost:8700/iportal", reqOps, "administrator", "", afterInit);
+            }
+            function afterInit() {
+                dashboard = new actuate.Dashboard("DropDashboardHere");
+                dashboard.setDashboardName("/Home/administrator/test.dashboard");
+                dashboard.downloadDashboard(setDashboardDef);
+            }
+            function setDashboardDef(defn) {
+                dashboardDef = defn;
+                dashboardDef.getRawData().tabs[0].sections[0].gadgets[0].gadgetContent.ReportParameterValues[0].Value = "1911 Ford Town Car";
+                dashboardDef.getRawData().tabs[0].sections[0].gadgets[0].gadgetContent.ReportParameterValues[0].DisplayName = "1911 Ford Town Car";
+                dashboard.renderContent(dashboardDef, function () {
+                    console.log("renderContent callback")});
+            }
+
+        </script>
+    </head>
+
+    <body>
+        <div id="DropDashboardHere"></div>
+        <script>
+            (function () {
+                acload()
+            })();
+        </script>
+    </body>
+</html>
+

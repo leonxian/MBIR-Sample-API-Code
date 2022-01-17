@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8">
+        <script src="js/jquery.js"></script>
+        <script src="css/jquery-ui.js"></script>
+        <script type="text/javascript" src="http://localhost:8700/iportal/jsapi"></script>
+        <script type="text/javascript">
+            var reportIds = {
+                order: "810000000100"
+            };
+        </script>
+        <link rel="stylesheet" href="css/jquery-ui.css">
+        <title>Sample REST Report Application</title>
+    </head>
+    <body onload="init()">
+        <h1>Sample REST Report Application</h1><hr>
+        <div id="output">            
+        </div>
+        <br>
+        <div id="viewerpane">
+            <script type="text/javascript">
+                var uriLogin = 'http://localhost:8000/api/v2/login';
+                var uriJobs = 'http://localhost:8000/api/v2/jobs/execute';
+                var iportalUrl = 'http://localhost:8700/iportal';
+                var iserverUrl = 'http://localhost:8000';
+                var authToken;
+                var username = "administrator";
+                var password = "";
+                var loginbody;
+
+                function init() {
+                    if (password) {
+                        loginbody = 'username=' + username + '&' + 'password=' + password;
+                    } else {
+                        loginbody = 'username=' + username;
+                    }
+                    $.ajax({
+                        type: 'POST',
+                        data: loginbody,
+                        url: uriLogin,
+                        dataType: 'json',
+                        crossDomain: true,
+                        success: function (data) {
+                            authToken = data.authToken;
+                            acLoad( );
+                        },
+                        error: function () {
+                            $('#output').html("Login failure <br/>User : " + username);
+                            $('input:text').val("");
+                        }
+                    });
+                }
+
+                function acLoad() {
+                    actuate.load("viewer");
+                    var reqOps = new actuate.RequestOptions();
+                    reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+                    reqOps.setIServerUrl(iserverUrl);
+                    reqOps.setVolumeProfile("Default Volume");
+                    reqOps.setRESTAuthToken(authToken);
+                    actuate.initialize(iportalUrl, reqOps, null, null, runReport, null);
+                }
+
+                function runReport() {
+                    //var uiConfig = new actuate.viewer.UIConfig();
+                    //uiConfig.setContentPanel(new actuate.viewer.BrowserPanel());
+                    var myviewer = new actuate.Viewer("viewerpane");
+                    myviewer.setSize(1200, 800);
+
+                    var reportId = reportIds.order;
+
+                    $.ajax({
+                        type: 'POST',
+                        url: uriJobs,
+                        dataType: 'json',
+                        data: 'reportId=' + reportId,
+                        crossDomain: true,
+                        //headers: {'AuthToken': authToken},
+                        success: function (data1) {
+                            var rptDoc = "/$$$Transient/" + data1.objectId + ".rptdocument";
+                            $('#output').html("Created Report Document: Report Id = " + reportId
+                                    + ", Object Id = " + data1.objectId
+                                    + ", Output File Type = " + data1.outputFileType
+                                    + ", Report Document = " + rptDoc);
+                            myviewer.setReportDocument(rptDoc, data1.connectionHandle);
+                            myviewer.submit( );
+                        },
+                        error: function () {
+                            $('#output').html("Failed to execute report<br/>Id: " + reportId);
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('AuthToken', authToken);
+                        }
+                    });
+                }
+            </script>
+        </div>
+    </body>
+</html>

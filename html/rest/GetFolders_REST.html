@@ -1,0 +1,220 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="js/jquery.js"></script>
+        <script src="css/jquery-ui.js"></script>
+        <link rel="stylesheet" href="css/jquery-ui.css" />
+        <title>Sample REST Folder Application</title>
+    </head>
+    <body onLoad="resetAll( )">
+        <h1>Sample REST Folder Application</h1><hr>
+        <div id="logintab">
+            username: <input type="text" id="input_username" placeholder="Required"/><br />
+            password: <input type="text" id="input_password" /><br /><br />
+            <button id="login">Log in</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button id="reset">Reset</button><br /><br />
+            <button id="getfiles">Get folder list</button><br /><br />
+
+            <label>Folder: </label>
+            <select id="folderDropdownList" class="stringInfoSpacing">
+                <option value="-1" selected="selected">Use Get folder list</option>
+            </select>
+            <button id="getfolderdetails">Get folder details</button><br /><br />
+
+        </div>        
+        <script type="text/javascript">
+            var uriLogin = 'http://localhost:8000/api/v2/login';
+            var uriFiles = 'http://localhost:8000/api/v2/files';
+            var authToken;
+            var username;
+            var password;
+            var loginbody = 'username=' + username + '&' + 'password=' + password;
+            // Reset all page data
+            $('#reset').click(function ( ) {
+                resetAll();
+            });
+            // handle username field change
+            $('#input_username').keyup(function ( ) {
+                username = $(this).val( );
+            });
+            // handle password field change
+            $('#input_password').keyup(function ( ) {
+                password = $(this).val( );
+            });
+            // process login button
+            $('#login').click(function ( ) {
+                if (password) {
+                    loginbody = 'username=' + username + '&' + 'password=' + password;
+                } else {
+                    loginbody = 'username=' + username;
+                }
+                ;
+                $.ajax({
+                    type: 'POST',
+                    data: loginbody,
+                    url: uriLogin,
+                    dataType: 'json',
+                    crossDomain: true,
+                    success: function (data) {
+                        authToken = data.authToken;
+                        $('#output').html("Login success!" +
+                                "<br/>AdminRights: " + data.adminRights +
+                                "<br/>authToken: " + data.authToken +
+                                "<br/>User ID: " + data.user.id +
+                                "<br/>Username :" + data.user.username +
+                                "<br/>email : " + data.user.email +
+                                "<br/>Home folder : " + data.user.homeFolder);
+                    },
+                    error: function () {
+                        $('#output').html("Login failure <br/>User : " + username);
+                        $('input:text').val("");
+                    }
+                });
+            });
+            // Process get folders button
+            $('#getfiles').click(function ( ) {
+                getFilesList();
+            });
+
+            var folderIndex = 0;
+            // Handle folder field change
+            $('#folderDropdownList').change(function () {
+                folderIndex = $(this).val();
+            });
+
+            // Process get folder details button            
+            $('#getfolderdetails').click(function () {
+                getFolderItems();
+                getFolderPrivs();
+            });
+
+            var xhr = new XMLHttpRequest({mozSystem: true});
+            function getFilesList() {
+                $.ajax({
+                    type: 'GET',
+                    url: uriFiles,
+                    dataType: 'json',
+                    crossDomain: true,
+                    success: function (result) {
+                        buildFolderList(result);
+                    },
+                    error: function () {
+                        $('#output').html("GetFiles failure <br/>");
+                        $('input:text').val("");
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('AuthToken', authToken);
+                    }
+                });
+            }
+            var folderCount = 0;
+            var folderIdArray = new Array();
+            function buildFolderList(result) {
+                $('#output').html("Folder: <br/>");
+                $("#fileDropdownList").empty();
+                $.each(result.itemList.file, function (i, item) {
+                    $('#output').append(item.name + '<br/>');
+                    folderIdArray[i] = item.id;
+                    $("<option value=\'" + i + "\'>" + item.name + "</option>").appendTo("#folderDropdownList");
+                });
+
+                $('#output').html("Folders: <br/>");
+                $.each(result.itemList.file, function (i, item) {
+                    if (item.fileType === 'Directory') {
+                        folderCount++;
+                        $("#output").append(folderCount + ". " + item.name + "<br/>");
+                    }
+                });
+                $('#output').append("<br/>Found " + folderCount + " folders.<br/>");
+            }
+
+            function getFolderItems() {
+                $.ajax({
+                    type: 'GET',
+                    url: uriFiles + '/' + folderIdArray[folderIndex],
+                    dataType: 'json',
+                    crossDomain: true,
+                    headers: {'AuthToken': authToken},
+                    success: function (data) {
+                        buildFolderItemsList(data);
+                    },
+                    error: function () {
+                        $('#output').html("GetFolder details failure. <br />");
+                        $('input:text').val("");
+                    }
+                });
+            }
+            function buildFolderItemsList(data) {
+                if (JSON.stringify(data.itemList) === '{}') {
+                    $('#output').html("No items in folder.<br />");
+                } else {
+                    $('#output').html("Items in folder:<br />").append($('<ol>'));
+                    $.each(data.itemList.file, function (i, item) {
+                        if (item.fileType === 'Directory') {
+                            $('#output ol').append($('<li>').text(item.name + " - a Directory"));
+                        } else {
+                            $.ajax({
+                                type: 'GET',
+                                url: uriFiles + '/' + item.id + '/properties',
+                                dataType: 'json',
+                                crossDomain: true,
+                                headers: {'AuthToken': authToken},
+                                success: function (data) {
+                                    $('#output ol').append($('<li>').text(data.name + " 'Size: " + data.size));
+                                },
+                                error: function () {
+                                    $('#output').html("Get File properties failure. <br />");
+                                    $('input:text').val("");
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+
+            function getFolderPrivs() {
+                $.ajax({
+                    type: 'GET',
+                    url: uriFiles + '/' + folderIdArray[folderIndex] + '/privileges',
+                    dataType: 'json',
+                    crossDomain: true,
+                    headers: {'AuthToken': authToken},
+                    success: function (data) {
+                        buildFolderPrivs(data);
+                    },
+                    error: function () {
+                        $('#output').html("GetFolder details failure. <br />");
+                        $('input:text').val("");
+                    }
+                });
+            }
+            function buildFolderPrivs(data) {
+                $('ul').empty( );
+                $('p').html("The folder " + data.file.name + " was last modified on " + data.file.timeStamp + "<br />" +
+                        data.file.name + " has the following privileges: <br />");
+                if (JSON.stringify(data.acl) === '{}') {
+                    $('p').append("Access Control List is empty! Administrator access only. < br / > ");
+                } else {
+                    $.each(data.acl.permissions, function (i, item) {
+                        $('ul').append($('<li>').text((item.name ? "User " + item.name : item.type ?
+                                "User Group " + item.type : '') + ": " + item.accessRights));
+                    });
+                }
+            }
+
+            function resetAll() {
+                $('input:text').val("");
+                $('#output').empty( );
+                $("#folderDropdownList").val(-1);
+                //$("#folderDropdownList").empty();
+                $("p").empty();
+                $("ul").empty();
+            }
+        </script>
+        <div id="output"></div>
+        <div id="details">
+            <p></p>
+            <ul></ul>
+        </div>
+    </body>
+</html>

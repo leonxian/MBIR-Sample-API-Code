@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <title>Sample Dashboard Display Page</title>      
+        <script type="text/javascript">
+            var demoDashboards = {
+                mobile: "/Applications/Maps Mapcite/Dashboards/Start_lxian.dashboard",
+                sfwealth: "/Applications/SFWealthApp/Dashboards/My Personal Wealth.dashboard",
+                web_crm: "/Applications/WebAnalysis_CRM/Dashboards/Web_CRM Analysis.dashboard",
+                itb: "/Applications/ITB Document Analysis APAC/Dashboards/ITB Document Analysis.dashboard"
+            };
+            var DEV_MODE = false;
+        </script>
+    </head>
+    <body onload="init()">
+        <div id="dashboard" style="width:1850px;height:2100px;">            
+            <script type="text/javascript" src="http://127.0.0.1:8700/iportal/jsapi"></script>
+            <script type="text/javascript">
+                var url = "http://127.0.0.1:8700/iportal/";
+                var username = "administrator";
+                var password = "";
+                function init( ){
+                    actuate.load("dashboard");
+                    var reqOps = new actuate.RequestOptions( );
+                    reqOps.setRepositoryType(actuate.RequestOptions.REPOSITORY_ENCYCLOPEDIA);
+                    actuate.initialize(url, reqOps, username, password, displayDashboard);
+                }
+                function displayDashboard( ) {
+                    var mydashboard = new actuate.Dashboard("dashboard");
+                    //var config = new actuate.viewer.UIConfig();
+                    //config.setContentPanel(new actuate.viewer.BrowserPanel());                    
+                    mydashboard.setWidth(1850);
+                    mydashboard.setHeight(2100);
+                    mydashboard.setDashboardName(demoDashboards.itb);
+                    // mydashboard.setIsDesigner(true);
+                    mydashboard.submit();
+                }
+            </script>
+        </div>
+    </body>
+</html>

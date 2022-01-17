@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body onload="myInit()">
+        <div id="viewer">
+            <script type='text/javascript' language='JavaScript' src='http://td-magellan.eastus.cloudapp.azure.com/iportal/jsapi'></script>
+            <script type='text/javascript'>
+                actuate.load('viewer');
+                var reqOps = new actuate.RequestOptions();
+                reqOps.setRepositoryType('Enterprise');
+                reqOps.setVolume('Default Volume');
+                reqOps.setCustomParameters({});
+                actuate.initialize('http://td-magellan.eastus.cloudapp.azure.com/iportal/', reqOps === undefined ? null : reqOps, "Administrator", "", myInit);
+
+                function myInit() {
+                    viewer1 = new actuate.Viewer('container1');
+                    viewer1.setReportDesign('/Applications/Innovate/Report Designs/Document Detail.rptdesign');
+                    var parameterValueMap = {
+                        "Document ID": "8373",
+                        hideSummary: "TRUE"
+                    };
+                    var parameterValues = [];
+                    for (var key in parameterValueMap) {
+                        var param = new actuate.viewer.impl.ParameterValue();
+                        param.setName(key);
+                        if (parameterValueMap[key] !== null) {
+                            param.setValue(parameterValueMap[key]);
+                        } else {
+                            param.setValueIsNull(true);
+                        }
+                        parameterValues.push(param);
+                    }
+                    viewer1.setParameterValues(parameterValues);
+                    var options = new actuate.viewer.UIOptions();
+                    viewer1.setUIOptions(options);
+                    viewer1.submit();
+                }
+            </script>
+            <div id='container1' style='border-width: 0px; border-style: solid;'></div>
+        </div>
+    </body>
+</html>
